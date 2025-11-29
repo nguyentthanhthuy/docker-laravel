@@ -15,9 +15,30 @@ jobs:
 
       - name: Stop old containers
         run: docker compose -f C:\xampp\htdocs\docker-laravel\docker-compose.yml down
+        shell: powershell
 
       - name: Build & Run containers
         run: docker compose -f C:\xampp\htdocs\docker-laravel\docker-compose.yml up -d --build
+        shell: powershell
+
+      - name: Wait for MySQL to be ready
+        run: |
+          $maxRetries = 10
+          $i = 0
+          while ($i -lt $maxRetries) {
+            try {
+              $res = docker exec mysql_laravel mysqladmin ping -uroot -proot --silent
+              if ($res -eq "mysqld is alive") { 
+                  Write-Host "MySQL is ready"
+                  break
+              }
+            } catch {
+              Write-Host "Waiting for MySQL..."
+            }
+            Start-Sleep -Seconds 5
+            $i++
+          }
+        shell: powershell
 
       - name: Run Laravel commands
         run: |
@@ -25,3 +46,4 @@ jobs:
           docker exec laravel_app php artisan migrate --force
           docker exec laravel_app php artisan optimize:clear
           docker exec -d laravel_app php artisan serve --host=0.0.0.0 --port=8000
+        shell: powershell

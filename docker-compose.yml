@@ -1,4 +1,3 @@
-
 services:
   app:
     build:
@@ -10,7 +9,7 @@ services:
     volumes:
       - ./:/var/www
     ports:
-      - "8000:8000"   # mở port để máy khác truy cập API
+      - "8000:8000"
     depends_on:
       - mysql
 
