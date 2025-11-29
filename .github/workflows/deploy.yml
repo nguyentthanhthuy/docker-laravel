@@ -1,4 +1,4 @@
-name: Deploy Laravel Docker
+name: Deploy Laravel Docker on Windows
 
 on:
   push:
@@ -7,22 +7,21 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Deploy to VPS using SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            cd /var/www/laravel
-            git pull
-            docker compose down
-            docker compose up -d --build
-            docker exec laravel_app php artisan migrate --force
-            docker exec laravel_app php artisan optimize:clear
+      - name: Stop old containers
+        run: docker compose -f C:\xampp\htdocs\docker-laravel\docker-compose.yml down
+
+      - name: Build & Run containers
+        run: docker compose -f C:\xampp\htdocs\docker-laravel\docker-compose.yml up -d --build
+
+      - name: Run Laravel commands
+        run: |
+          docker exec laravel_app php artisan key:generate
+          docker exec laravel_app php artisan migrate --force
+          docker exec laravel_app php artisan optimize:clear
+          docker exec -d laravel_app php artisan serve --host=0.0.0.0 --port=8000
